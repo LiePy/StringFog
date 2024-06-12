@@ -78,7 +78,8 @@ class StringFogPlugin : Plugin<Project> {
             StringFogTransform.setParameters(stringfog, logs, "$applicationId.${SourceGeneratingTask.FOG_CLASS_NAME}")
             variant.instrumentation.transformClassesWith(
                 StringFogTransform::class.java,
-                InstrumentationScope.PROJECT) {
+                InstrumentationScope.ALL    // ALL
+            ) {
             }
             variant.instrumentation.setAsmFramesComputationMode(
                 FramesComputationMode.COMPUTE_FRAMES_FOR_INSTRUMENTED_METHODS
