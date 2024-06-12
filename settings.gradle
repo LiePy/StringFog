@@ -1,6 +1,6 @@
 include ':app', ':stringfog-gradle-plugin', ':stringfog-core', ':stringfog-interface'
 file('stringfog-ext').listFiles().each {
-    if (it.isDirectory()) {
+    if (it.isDirectory() && !it.name.startsWith(".")) {
         include ":stringfog-ext:${it.name}"
     }
 }

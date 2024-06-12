@@ -1,10 +1,42 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
+apply plugin: 'maven-publish'
+apply from: (rootProject.projectDir.path + '/buildscript/import.gradle')
 
 buildscript {
+
+
+    project.ext.load = { path ->
+        Reader reader = new File(project.rootDir.getPath(), path).newReader()
+        def config = new Properties()
+        config.load(reader)
+        reader.close()
+
+        return config
+    }
+
+    def ps = load('local.properties')
+
     repositories {
         google()
         mavenCentral()
         mavenLocal()
+        maven {
+            allowInsecureProtocol true
+            url uri(ps['maven.url'])
+            credentials {
+                username = ps['maven.userName']
+                password = ps['maven.userPass']
+            }
+        }
+
+        maven {
+            allowInsecureProtocol true
+            url uri(ps['maven.snaUrl'])
+            credentials {
+                username = ps['maven.userName']
+                password = ps['maven.userPass']
+            }
+        }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:8.0.0'
@@ -13,6 +45,7 @@ buildscript {
         classpath 'com.github.megatronking.stringfog:gradle-plugin:5.1.0'
         // 选用加解密算法库，默认实现了xor算法，也可以使用自己的加解密库。
         classpath 'com.github.megatronking.stringfog:xor:5.0.0'
+        classpath 'fast.build:fast.plugin:v0.11.3.0-SNAPSHOT'
     }
 }
 
@@ -21,6 +54,33 @@ allprojects {
         google()
         mavenCentral()
         mavenLocal()
+    }
+
+    afterEvaluate {
+        configurations.configureEach {
+            resolutionStrategy.cacheDynamicVersionsFor 10, 'minutes'// 动态版本  10 min
+            resolutionStrategy.cacheChangingModulesFor 0, 'seconds'// 快照版本   0 s
+        }
+
+        products {
+            maven {
+                if (params['mavenUrl'] != null) {
+                    rc {
+                        target = params['mavenUrl']
+                        user = params['user']
+                        password = params['password']
+                    }
+                }
+
+                if (params['mavenSnaUrl'] != null) {
+                    beta {
+                        target = params['mavenSnaUrl']
+                        user = params['user']
+                        password = params['password']
+                    }
+                }
+            }
+        }
     }
 }
 

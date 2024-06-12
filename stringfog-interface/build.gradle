@@ -11,3 +11,18 @@ apply from: '../maven_local.gradle'
 
 // The following is used for mavenCentral publish.
 // apply from: '../maven_nexus.gradle'
+
+
+afterEvaluate {
+    products {
+        artifact {
+            components.forEach {
+                println("components=" + it.name)
+            }
+            id = ARTIFACTID
+            ver = VERSION
+            groupId = GROUP
+            source = components.java
+        }
+    }
+}

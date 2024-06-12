@@ -7,8 +7,10 @@ dependencies {
     implementation gradleApi()
     implementation localGroovy()
     implementation 'com.android.tools.build:gradle:8.0.0'
-    implementation project(':stringfog-core')
-    implementation project(':stringfog-interface')
+//    implementation project(':stringfog-core')
+//    implementation project(':stringfog-interface')
+    implementation 'com.github.megatronking.stringfog:core:5.1.0'
+    implementation 'com.github.megatronking.stringfog:interface:5.0.0'
 }
 
 sourceSets {
@@ -22,10 +24,10 @@ sourceSets {
     }
 }
 
-tasks.withType(ProcessResources){
+tasks.withType(ProcessResources) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
-tasks.withType(Jar){
+tasks.withType(Jar) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
@@ -42,3 +44,17 @@ apply from: '../maven_local.gradle'
 
 // The following is used for mavenCentral publish.
 // apply from: '../maven_nexus.gradle'
+
+afterEvaluate {
+    products {
+        artifact {
+            components.forEach {
+                println("components=" + it.name)
+            }
+            id = ARTIFACTID
+            ver = VERSION
+            groupId = GROUP
+            source = components.kotlin
+        }
+    }
+}

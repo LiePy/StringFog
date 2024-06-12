@@ -1,0 +1,314 @@
+interface Part {
+    InputStream data() throws FileNotFoundException;
+}
+
+interface BodyPart extends Part {
+    Map<String, String> getHeads()
+}
+
+class UrlEncodePart implements BodyPart {
+    private Map<String, String> _headers
+    private Map<String, String> _params
+
+    UrlEncodePart() {
+        _params = new HashMap<String, String>()
+        _headers = new HashMap<String, String>()
+        _headers.put("Charset", "utf-8"); // 设置编码
+        _headers.put("Content-Type", "application/x-www-form-urlencoded");
+    }
+
+    UrlEncodePart parameter(String name, String value) {
+        _params.put(name, value)
+        return this
+    }
+
+    @Override
+    InputStream data() throws FileNotFoundException {
+        var sb = new StringBuilder()
+        var iterator = _params.iterator()
+        iterator.forEachRemaining {
+            var k = it.key
+            var v = it.value
+            var ev = URLEncoder.encode(v)
+            sb.append(k).append("=").append(ev)
+            if (iterator.hasNext())
+                sb.append("&")
+        }
+
+        return new ByteArrayInputStream(sb.toString().getBytes())
+    }
+
+    @Override
+    Map<String, String> getHeads() {
+        return _headers
+    }
+}
+
+class JsonPart implements BodyPart {
+    private var bostream
+    private Map<String, String> headers
+
+    JsonPart() {
+        bostream = new ByteArrayOutputStream()
+        headers = new HashMap<String, String>()
+        headers.put("Charset", "utf-8"); // 设置编码
+        headers.put("Content-Type", "application/json");
+    }
+
+    void addBody(Object object) {
+        bostream.write(object.toString().getBytes())
+    }
+
+    OutputStream outputStream() {
+        return bostream
+    }
+
+    @Override
+    InputStream data() throws FileNotFoundException {
+        return new ByteArrayInputStream(bostream.toByteArray())
+    }
+
+    @Override
+    Map<String, String> getHeads() {
+        return headers
+    }
+}
+
+class Multipart implements BodyPart {
+    private final String _lineEnd = "\r\n";
+
+    private final String _boundary = "----" + UUID.randomUUID().toString();
+
+    private final String _chunkBoundary = "--" + _boundary + _lineEnd;
+
+    private final String _endBoundary = "--" + _boundary + "--" + _lineEnd;
+
+    private List<Part> _items = new ArrayList<Part>();
+
+    private Map<String, String> _headers;
+
+    Multipart() {
+        _headers = new HashMap<String, String>();
+
+        _headers.put("Charset", "utf-8"); // 设置编码
+        _headers.put("Content-Type", "multipart/form-data;boundary=" + _boundary);
+    }
+
+    private String boundary() {
+        return _boundary;
+    }
+
+    private String chunkBoundary() {
+        return _chunkBoundary;
+    }
+
+    private String endBoundary() {
+        return _endBoundary;
+    }
+
+    void add(Part item) {
+        _items.add(item);
+    }
+
+    void addFile(File file, String id, String fileName, String mimType) {
+        add(new FilePart(file, id, fileName, mimType));
+    }
+
+    ParamPart addParam() {
+        ParamPart part = new ParamPart();
+
+        add(part);
+
+        return part;
+    }
+
+    void addFile(File file, String id) {
+        add(new FilePart(file, id, null, null));
+    }
+
+    void addFile(File file, String id, String minType) {
+        add(new FilePart(file, id, null, minType));
+    }
+
+    Map<String, String> getHeads() {
+        return _headers;
+    }
+
+    class FilePart implements Part {
+        private File _file;
+        private String _fileID;
+        private String _fileName;
+        private String _mimType;
+
+        FilePart(File file, String fileID, String fileName, String mimType) {
+            _file = file;
+            _fileID = fileID;
+            _fileName = fileName;
+            _mimType = mimType;
+        }
+
+        @Override
+        InputStream data() throws FileNotFoundException {
+            StringBuilder builder = new StringBuilder();
+
+            builder.append(chunkBoundary());
+            builder.append("Content-Disposition:form-data; name=\"" + _fileID
+                    + "\"; filename=\"" + (_fileName == null ? _file.getName() : _fileName) + "\"" + _lineEnd);
+            if (_mimType != null)
+                builder.append("Content-Type:" + _mimType + _lineEnd);
+
+            builder.append(_lineEnd);
+
+            Vector<InputStream> vector = new Vector<InputStream>();
+
+            vector.add(new ByteArrayInputStream(builder.toString().getBytes('utf-8')));
+            vector.add(new FileInputStream(_file));
+            vector.add(new ByteArrayInputStream(_lineEnd.getBytes('utf-8')));
+
+            return new SequenceInputStream(vector.elements());
+        }
+    }
+
+    class ParamPart implements Part {
+        private Map<String, String> _params = new HashMap<String, String>();
+
+        ParamPart parameter(String name, String value) {
+            _params.put(name, value);
+
+            return this;
+        }
+
+        @Override
+        InputStream data() {
+            StringBuilder builder = new StringBuilder();
+
+            for (Map.Entry<String, String> entry : _params.entrySet()) {
+                builder.append(chunkBoundary());
+                builder.append("Content-Disposition:form-data; name=\"" + entry.getKey() + "\"");
+                builder.append(_lineEnd);
+                builder.append(_lineEnd);
+                builder.append(entry.getValue());
+                builder.append(_lineEnd);
+            }
+
+            return new ByteArrayInputStream(builder.toString().getBytes());
+        }
+    }
+
+    InputStream data() throws IOException {
+        Vector<InputStream> streams = new Vector<InputStream>();
+
+        for (Part item : _items) {
+            streams.add(item.data());
+        }
+
+        streams.add(new ByteArrayInputStream(endBoundary().getBytes()));
+
+        return new SequenceInputStream(streams.elements());
+    }
+}
+
+class HttpRequest {
+    private var url = ""
+    private var heads = new HashMap<String, String>()
+    private BodyPart part
+
+    def getUrl() {
+        return url
+    }
+
+    void setUrl(String url) {
+        this.url = url
+    }
+
+    def getHeads() {
+        return heads
+    }
+
+    void addHead(String k, String v) {
+        this.heads.put(k, v)
+    }
+
+    BodyPart getPart() {
+        return part
+    }
+
+    void part(Closure closure) {
+        closure.delegate = part
+        closure()
+    }
+
+    HttpRequest(BodyPart part) {
+        this.part = part
+    }
+}
+
+class FileUpdater {
+    private Project _project
+
+    FileUpdater(Project project) {
+        this._project = project
+    }
+
+    public void findTaskByName(String name, Action<Task> action) {
+        var t = _project.tasks.findByName(name)
+        if (t != null)
+            action.execute(t)
+        else
+            println "Can't find task $name"
+    }
+
+    public String uploadFile(Closure<HttpRequest> closure) {
+        Multipart multipart = new Multipart()
+        var req = new HttpRequest(multipart)
+        closure.delegate = req
+        closure.call()
+
+        return post(req)
+    }
+
+    public String postJson(Closure<HttpRequest> closure) {
+        var part = new JsonPart()
+        var req = new HttpRequest(part)
+        closure.delegate = req
+        closure.call()
+
+        return post(req)
+    }
+
+    public String postUrlEncode(Closure<HttpRequest> closure) {
+        var part = new UrlEncodePart()
+        var req = new HttpRequest(part)
+        closure.delegate = req
+        closure.call()
+
+        return post(req)
+    }
+
+    private String post(HttpRequest request) {
+        def connection = (HttpURLConnection) new URL(request.url).openConnection()
+
+        // 设置请求头参数
+        request.part.heads.forEach { k, v ->
+            connection.setRequestProperty(k, v)
+        }
+        request.heads.forEach { k, v ->
+            connection.setRequestProperty(k, v)
+        }
+
+        connection.setRequestMethod("POST")
+        connection.setDoOutput(true)
+
+        connection.getOutputStream() << request.part.data()
+
+        if (connection.getResponseCode() != 200)
+            throw new GradleException('requst ' + request.url + ' error code ' + connection.getResponseCode())
+        else {
+            def bytes = connection.getInputStream().readAllBytes()
+            return new String(bytes)
+        }
+    }
+}
+
+
+project.extensions.create("fileupdater", FileUpdater.class, project)

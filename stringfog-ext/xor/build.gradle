@@ -2,6 +2,7 @@ apply plugin: 'java-library'
 
 dependencies {
     api project(':stringfog-interface')
+//    api 'com.github.megatronking.stringfog:interface:5.0.0'
 }
 
 sourceCompatibility = JavaVersion.VERSION_11
@@ -11,3 +12,15 @@ apply from: '../../maven_local.gradle'
 
 // The following is used for mavenCentral publish.
 // apply from: '../../maven_nexus.gradle'
+
+
+afterEvaluate {
+    products {
+        artifact {
+            id = ARTIFACTID
+            ver = VERSION
+            groupId = GROUP
+            source = components.java
+        }
+    }
+}

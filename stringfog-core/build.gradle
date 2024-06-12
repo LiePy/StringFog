@@ -5,6 +5,7 @@ dependencies {
     implementation 'org.ow2.asm:asm:9.2'
     implementation 'com.squareup:javawriter:2.5.1'
     implementation project(':stringfog-interface')
+//    implementation 'com.github.megatronking.stringfog:interface:5.0.0'
 }
 
 sourceCompatibility = JavaVersion.VERSION_11
@@ -14,3 +15,18 @@ apply from: '../maven_local.gradle'
 
 // The following is used for mavenCentral publish.
 // apply from: '../maven_nexus.gradle'
+
+
+afterEvaluate {
+    products {
+        artifact {
+            components.forEach {
+                println("components=" + it.name)
+            }
+            id = ARTIFACTID
+            ver = VERSION
+            groupId = GROUP
+            source = components.java
+        }
+    }
+}
