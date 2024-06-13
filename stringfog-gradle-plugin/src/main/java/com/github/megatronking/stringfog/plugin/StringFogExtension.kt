@@ -48,4 +48,11 @@ abstract class StringFogExtension {
      */
     var fogPackages : Array<String> = emptyArray()
 
+    /**
+     * Whether to encrypt all strings in a class, including dependency packages.
+     *
+     * Setting to true does not take effect for library projects, as instrumenting library dependencies will have no effect on library consumers.
+     */
+    var fogAll: Boolean = false
+
 }
