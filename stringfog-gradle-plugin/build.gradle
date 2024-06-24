@@ -9,7 +9,7 @@ dependencies {
     implementation 'com.android.tools.build:gradle:8.0.0'
 //    implementation project(':stringfog-core')
 //    implementation project(':stringfog-interface')
-    implementation 'com.github.megatronking.stringfog:core:5.1.0'
+    implementation 'com.github.megatronking.stringfog:core:5.1.1-SNAPSHOT'
     implementation 'com.github.megatronking.stringfog:interface:5.0.0'
 }
 

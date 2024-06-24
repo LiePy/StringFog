@@ -4,8 +4,8 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'org.ow2.asm:asm:9.2'
     implementation 'com.squareup:javawriter:2.5.1'
-    implementation project(':stringfog-interface')
-//    implementation 'com.github.megatronking.stringfog:interface:5.0.0'
+//    implementation project(':stringfog-interface')
+    implementation 'com.github.megatronking.stringfog:interface:5.0.0'
 }
 
 sourceCompatibility = JavaVersion.VERSION_11

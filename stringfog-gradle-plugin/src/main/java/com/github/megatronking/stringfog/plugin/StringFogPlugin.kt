@@ -51,6 +51,9 @@ class StringFogPlugin : Plugin<Project> {
             if (!stringfog.enable) {
                 return@onVariants
             }
+            if (stringfog.buildConfig) {
+                WhiteLists.removeWhiteList("BuildConfig")
+            }
             var applicationId: String? = null
             // We must get the package name to generate <package name>.StringFog.java
             // Priority: AndroidManifest -> namespace -> stringfog.packageName

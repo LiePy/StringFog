@@ -55,4 +55,14 @@ abstract class StringFogExtension {
      */
     var fogAll: Boolean = false
 
+    /**
+     * 需要加密的类的匹配规则
+     */
+    var fogRegex : String = ".*"
+
+
+    /**
+     * buildConfig 是否加密，默认否
+     */
+    var buildConfig: Boolean = false
 }

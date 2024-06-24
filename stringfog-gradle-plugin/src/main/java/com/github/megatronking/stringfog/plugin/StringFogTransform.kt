@@ -35,7 +35,7 @@ abstract class StringFogTransform : AsmClassVisitorFactory<InstrumentationParame
         nextClassVisitor: ClassVisitor
     ): ClassVisitor {
         return ClassVisitorFactory.create(
-            implementation, logs, extension.fogPackages, extension.kg, className,
+            implementation, logs, extension.fogPackages, extension.fogRegex, extension.kg, className,
             classContext.currentClassData.className, extension.mode, nextClassVisitor
         )
     }

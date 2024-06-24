@@ -43,6 +43,12 @@ final class WhiteLists {
         return !TextUtils.isEmpty(name) && checkClass(shortClassName(name));
     }
 
+    static void removeWhiteList(String name) {
+        while (CLASS_WHITE_LIST.contains(name)) {
+            CLASS_WHITE_LIST.remove(name);
+        }
+    }
+
     private WhiteLists() {
     }
 
